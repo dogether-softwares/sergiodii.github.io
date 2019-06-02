@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/png" href="./images/fivecon_32_32-01.png"/>
+    <style>
+        .hide-mouse{
+            cursor:none;
+        }
+        .show-mouse{
+            cursor:auto;
+        }
+        body{
+            margin: 0ch;
+            padding: 0ch;
+            overflow: hidden;
+            background-image: url('./images/back_stars.jpg');
+            height: 100vh;
+            background-repeat: repeat-y;
+            background-position: 0 0;
+            animation: animate 24s linear infinite;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+
+        }
+        @keyframes animate {
+            from {
+                background-position: 0 100%;
+            }
+            to {
+                background-position: 0 0;
+            }
+        }
+        .enemyfire{
+            position: absolute;
+            transform: rotate(90deg)
+        }
+        .rocketfire{
+            /*background-image: url('./images/rocketfire.gif');*/
+            color: white;
+            height: 16px ;
+            position:absolute;
+        }
+        .enemy {
+            position: absolute;
+            margin-left: -75px;
+            display: none
+        }
+        .score{
+            position: absolute;
+            right: 5%;
+            bottom: 10%;
+            border: 1px orange solid;
+            padding: 10px;
+            color:orange
+        }
+        .gameover{
+            flex:auto ;
+            position: absolute;
+            top:50%;
+            margin-top: -15em;
+            left: 50%;
+            margin-left: -15em;
+            height: 30em;
+            width: 30em;
+            border: 3px orange solid;
+            color: orange;
+        }
+        .gameover .head{
+            position:relative;
+            top: 5%;
+            font-size: 2em;
+            left:50%;
+            margin-left: -20%
+        }
+        .gameover .restartbutton{
+            position: relative;
+            top: 14em;
+            left: 50%;
+            margin-left: -2.5em ; 
+            font-size: 1.5em;
+            height: 1.5em;
+            width: 5em;
+            border: 2px solid orange;
+            text-align: center;
+        }
+
+    </style>
+    <title>dogether softwares</title>
+</head>
+<body>
+    <div id="body">
+    </div>
+    <div class="gameover">
+        <div class="head">GAME-OVER</div>
+        <div class="restartbutton" onclick="restart()">Reiniciar!</div>
+    </div>
+    <div class="score"><img src="./images/fivecon_32_32-01.png" width="30px" alt=""><div class="pontuation">PONTUAÇÃO - 0</div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+    <script>
+        console.log($(window).height())
+    
+    
+    class DogetherGame {
+        changeLevel = true
+        level = 2
+        pontuation = 0
+        rocketX = 0
+        rocketY = 0
+        gameOverStatus = false
+
+        _newEnemy(){
+            let idEnemy = `${((Math.random() * 40)*7).toFixed(0)}`
+            $('#body').append(`<div class="enemy" style="left: ${(Math.random()*10)*10}%" id="enemy-${idEnemy}"><img src="./images/enemy.gif" width="150px"  alt=""></div>`)
+            $(`#enemy-${idEnemy}`).slideDown(1000)
+            setTimeout(()=>{
+                this._enemyFire(`#enemy-${idEnemy}`)
+                let interval = setInterval(()=>{
+                    if(this.gameOverStatus){
+                        clearInterval(interval)
+                    }
+                    this._enemyFire(`#enemy-${idEnemy}`)
+                },3000)
+            },1500)
+        }
+
+        _enemyFire(id){
+            let position = $(id).position()
+            $('#body').append(`<img src="./images/enemyfire.gif" style="left:${position.left -30}px;top: ${position.top + 56}px;"  width="50px" class="enemyfire" alt="">`)
+            $('.enemyfire').animate({top: $(window).height()}, 2000, ()=>{})
+        }
+        _rocketFire(e){
+            $('#body').append(`<div class="rocketfire" style="left:${(e.clientX - 7)}px;top:${e.clientY}px"><img src="./images/rocketfire.gif" width="16px" ;margin-left: -8px></div>`)
+            $('.rocketfire').animate({top: -30},1000,()=>{})
+        }
+        _addPontuation(){
+            this.pontuation = this.pontuation + (10 * this.level)
+            $('.pontuation').html(`PONTUAÇÃO - ${this.pontuation}`)
+        }
+
+        _killEnemy(element){
+            let topP = ($(element).position()).top
+            let leftP = ($(element).position()).left
+            $(element).remove()
+            let explosionId= `${((Math.random() * 40)*7).toFixed(0)}`
+            $('#body').prepend(`<div id="explosion-${explosionId}" style="top:${topP}px;left:${leftP - 75}px;position:absolute"><img src="./images/enemy-explosion.gif" width="150px" alt=""></div>`)
+            $(element).remove()
+            this._addPontuation()
+            setTimeout(()=>{
+                $(`#explosion-${explosionId}`).remove()
+                if (!this.changeLevel){
+                    this.changeLevel = false
+                    for (let i = 1; i < this.level; i++) {
+                        this._newEnemy()
+                    }
+                } else {
+                    this._newEnemy()
+                }
+            },700)
+        }
+        _killRocket(){
+            console.log('morreu')
+            let position = $('#rocket').position()
+            $('#rocket').remove()
+            $('#body').prepend(`<div id="rocketExplosion" style="position:absolute;left: ${position.left - 75}px ;top:${position.top}px"><img src="./images/rocket-explosion.gif" width="150px"></div>`)
+            
+            setTimeout(()=>{
+                $('#rocketExplosion').remove()
+            },500)
+            setTimeout(()=>{
+                this.gameOver()
+            },3000)
+        }
+
+        _moveRocket(e){
+            this.rocketX = e.clientX
+            this.rocketY = e.clientY
+            $('#rocket').animate({left: `${e.clientX}`, top: e.clientY}, 1,() => {})
+        }
+        
+        start(){
+            this.gameOverStatus = false
+            $('body').removeClass('show-mouse')
+            $('body').addClass('hide-mouse')
+            $('.gameover').hide()
+            $('#body').html('')
+            this._newEnemy()
+            $('#body').append('<img src="./images/rocket2.gif" id="rocket" style="width:80px;position: absolute;margin-left: -40px">')
+            $(document).mousemove(this._moveRocket).click(this._rocketFire)
+            this._scanGameScreen()
+        }
+
+        gameOver(){
+            this.gameOverStatus = true
+            $('body').removeClass('hide-mouse')
+            $('body').addClass('show-mouse')
+            $('.gameover').show()
+        }
+
+        _scanGameScreen(){
+            let interval = setInterval(()=>{
+            if(this.gameOverStatus){
+                clearInterval(interval)
+            }
+            let arrBody = document.getElementById('body').children
+            let enemyList = []
+            //let rocketlist = []
+            for( let element of arrBody){
+                if (($(element).position()).top === -30){
+                    $(element).remove()
+                }
+                if(element.className === 'enemy') {
+                    enemyList.push({
+                        top: ($(element).position()).top,
+                        left: ($(element).position()).left,
+                        element: element
+                    })
+                }
+            }
+            for(let element of arrBody){
+                if(element.className === 'enemyfire'){
+                    let topE = 20
+                    let leftE = 150
+                    '10 20 30'
+                   if(this.rocketY === ($(element).position()).top){
+                       console.log('maior')
+                   }
+                    if(($(element).position()).top > ($(window).height() - 50)){
+                        $(element).remove()
+                    }
+                    // ($(element).position()).left
+                }
+                if(element.className === 'rocketfire'){
+                    let topE = 80
+                    let leftE = 80
+                    for(let el of enemyList){
+                        if((el.top - topE) <= ($(element).position()).top && (el.top + topE) >= ($(element).position()).top){
+                            if((el.left - leftE) <= ($(element).position()).left && (($(el.element).position()).left + leftE) >= ($(element).position()).left){                                
+                                $(element).remove()
+                                startGame._killEnemy(el.element)
+                            }
+                        }
+                    }
+                }
+            }
+            enemyList = []
+         },10)
+        }
+    }
+    
+    let startGame = new DogetherGame
+    function restart(){
+        startGame.start()
+    } 
+
+    setTimeout(()=>{
+        startGame._killRocket()
+    },4000)
+    
+    $(function (){
+        startGame.start()
+    })
+    
+    
+    </script>
+</body>
+</html>
