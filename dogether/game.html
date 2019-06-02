@@ -6,7 +6,7 @@
     <link rel="shortcut icon" type="image/png" href="./images/fivecon_32_32-01.png"/>
     <style>
         .hide-mouse{
-            cursor:none;
+            cursor: none;
         }
         .show-mouse{
             cursor:auto;
@@ -15,7 +15,7 @@
             margin: 0ch;
             padding: 0ch;
             overflow: hidden;
-            background-image: url('./images/back_stars.jpg');
+            /* background-image: url('./images/back_stars.jpg'); */
             height: 100vh;
             background-repeat: repeat-y;
             background-position: 0 0;
@@ -123,7 +123,8 @@
             setTimeout(()=>{
                 this._enemyFire(`#enemy-${idEnemy}`)
                 let interval = setInterval(()=>{
-                    if(this.gameOverStatus){
+                    console.log( $(`#enemy-${idEnemy}`) )
+                    if(this.gameOverStatus || !$(`#enemy-${idEnemy}`).length){
                         clearInterval(interval)
                     }
                     this._enemyFire(`#enemy-${idEnemy}`)
@@ -167,10 +168,10 @@
         }
         _killRocket(){
             console.log('morreu')
+            $(document).off('mousemove').off('click')
             let position = $('#rocket').position()
             $('#rocket').remove()
             $('#body').prepend(`<div id="rocketExplosion" style="position:absolute;left: ${position.left - 75}px ;top:${position.top}px"><img src="./images/rocket-explosion.gif" width="150px"></div>`)
-            
             setTimeout(()=>{
                 $('#rocketExplosion').remove()
             },500)
@@ -193,7 +194,7 @@
             $('#body').html('')
             this._newEnemy()
             $('#body').append('<img src="./images/rocket2.gif" id="rocket" style="width:80px;position: absolute;margin-left: -40px">')
-            $(document).mousemove(this._moveRocket).click(this._rocketFire)
+            $(document).click(this._rocketFire).mousemove(this._moveRocket)
             this._scanGameScreen()
         }
 
