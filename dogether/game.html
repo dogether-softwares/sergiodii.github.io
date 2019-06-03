@@ -96,6 +96,7 @@
 <body>
     <div id="body">
     </div>
+    <div id="liveboss" style="color:white;display:none"></div>
     <div class="gameover">
         <div class="head">GAME-OVER</div>
         <div class="restartbutton" onclick="restart()">Reiniciar!</div>
@@ -121,13 +122,13 @@
     */
     class DogetherGame {
         changeLevel = true
-        level = 2
+        level = 1
         pontuation = 0
         rocketX = 0
         rocketY = 0
         gameOverStatus = false
         activeBoss = false
-        liveBigBoss = 100
+        liveBigBoss = 50
         hitDamageBigBoss = 0
 
         /*
@@ -173,8 +174,8 @@
         *  
         *
         */
-        _addPontuation(){
-            this.pontuation = this.pontuation + (10 * this.level)
+        _addPontuation(pontuation){
+            this.pontuation = this.pontuation + (pontuation * this.level)
             $('.pontuation').html(`PONTUAÇÃO - ${this.pontuation}`)
         }
 
@@ -198,7 +199,7 @@
             let explosionId= `${((Math.random() * 40)*7).toFixed(0)}`
             $('#body').prepend(`<div id="explosion-${explosionId}" style="top:${topP}px;left:${leftP - 75}px;position:absolute"><img src="./images/enemy-explosion.gif" width="150px" alt=""></div>`)
             $(element).remove()
-            this._addPontuation()
+            this._addPontuation(20)
             setTimeout(()=>{
                 $(`#explosion-${explosionId}`).remove()
                 let pp = this.pontuation
@@ -265,9 +266,11 @@
         }
         _damageBigBoss(){
             this.hitDamageBigBoss++
-            if (this.hitDamageBigBoss > 25) {
+            if (this.hitDamageBigBoss > 10) {
                 this.hitDamageBigBoss = 0
-                this.liveBigBoss-- 
+                this._addPontuation(77)
+                this.liveBigBoss--
+                $('#liveboss').html(`BIGBOSS - ${this.liveBigBoss}`)
                 this._killBigBoss()
             }
         }
@@ -306,17 +309,18 @@
             let idBigBoss = `${((Math.random() * 40)*7).toFixed(0)}`
             $('#body').append(`<img width="300px" class="bigboss" id="bigboss-${idBigBoss}" src="./images/BigBoss.gif" style="position:absolute;top: -200px;left:150px;margin-left:-150px">`)
             let maxLeft = 0
-            let maxRight = ($(window).width()) - 250
-            $(`#bigboss-${idBigBoss}`).animate({top: 0},6000,()=>{toRigth()})
-            function startFire(id){
-            }
+            let maxRight = ($(window).width()) - 30
+            $(`#bigboss-${idBigBoss}`).animate({top: 0},6000,()=>{
+                $('#liveboss').show()
+                toRigth()
+                })
             let self = this
             function toRigth(){
                 if(self.liveBigBoss < 1){
                     return false
                 }
                 $(`#bigboss-${idBigBoss}`).animate({left: maxRight},6000,()=>{toLeft()})
-                startFire(`#bigboss-${idBigBoss}`)
+                //startFire(`#bigboss-${idBigBoss}`)
             }
             function toLeft(){
                 if(self.liveBigBoss < 1){
@@ -347,6 +351,10 @@
         }
         
         start(){
+            this.liveBigBoss = 50
+            $('#liveboss').html(`BIGBOSS - ${this.liveBigBoss}`)
+            $('#liveboss').hide()
+
             this.activeBoss = false
             this._clearPontuation()
             this.gameOverStatus = false
