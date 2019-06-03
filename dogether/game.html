@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -91,7 +91,7 @@
         }
 
     </style>
-    <title>dogether softwares</title>
+    <title>doRocket - doGether</title>
 </head>
 <body>
     <div id="body">
@@ -102,12 +102,23 @@
     </div>
     <div class="score"><img src="./images/fivecon_32_32-01.png" width="30px" alt=""><div class="pontuation">PONTUAÇÃO - 0</div>
     </div>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
     <script>
-        console.log($(window).height())
-    
-    
+    /*
+    //  pt-BR ***
+    //  Esse jogo foi criado com o intuito de ser uma simples demonstração de uso do Jquery e JavaScript.
+    //  Não há intuito comercial. As imagens foram obtidas através de sites especializados em imagens GIF
+    //  Desenvolvido por Sérgio Venâncio.
+    //  Se tiver uma ótima ideia ou até mesmo uma sugestão ou melhoria, fique a vontade para fazer um Pull Request, 
+    //  vou adorar ;D.
+    //  PS.: Por Favor NÃO USE IEXPLORER.
+    /
+    |================================================================
+    |   Class DogetherGame
+    |================================================================
+    |
+    |
+    */
     class DogetherGame {
         changeLevel = true
         level = 2
@@ -115,9 +126,16 @@
         rocketX = 0
         rocketY = 0
         gameOverStatus = false
+        activeBoss = false
+        liveBigBoss = 100
+        hitDamageBigBoss = 0
 
+        /*
+        *  
+        *
+        */
         _newEnemy(){
-            let idEnemy = `${((Math.random() * 40)*7).toFixed(0)}`
+            let idEnemy = `${((Math.random() * 40)*7).toFixed(0) * (new Date().getMilliseconds() * new Date().getMinutes())}-${new Date().getUTCMilliseconds()}`
             $('#body').append(`<div class="enemy" style="left: ${(Math.random()*10)*10}%" id="enemy-${idEnemy}"><img src="./images/enemy.gif" width="150px"  alt=""></div>`)
             $(`#enemy-${idEnemy}`).slideDown(1000)
             setTimeout(()=>{
@@ -132,20 +150,47 @@
             },1500)
         }
 
+        /*
+        *  
+        *
+        */
         _enemyFire(id){
             let position = $(id).position()
             $('#body').append(`<img src="./images/enemyfire.gif" style="left:${position.left -30}px;top: ${position.top + 56}px;"  width="50px" class="enemyfire" alt="">`)
             $('.enemyfire').animate({top: $(window).height()}, 2000, ()=>{})
         }
+
+        /*
+        *  
+        *
+        */
         _rocketFire(e){
             $('#body').append(`<div class="rocketfire" style="left:${(e.clientX - 7)}px;top:${e.clientY}px"><img src="./images/rocketfire.gif" width="16px" ;margin-left: -8px></div>`)
             $('.rocketfire').animate({top: -30},1000,()=>{})
         }
+
+        /*
+        *  
+        *
+        */
         _addPontuation(){
             this.pontuation = this.pontuation + (10 * this.level)
             $('.pontuation').html(`PONTUAÇÃO - ${this.pontuation}`)
         }
 
+        /*
+        *  
+        *
+        */
+        _clearPontuation(){
+            this.pontuation = 0
+            $('.pontuation').html(`PONTUAÇÃO - ${this.pontuation}`)
+        }
+
+        /*
+        *  
+        *
+        */
         _killEnemy(element){
             let topP = ($(element).position()).top
             let leftP = ($(element).position()).left
@@ -156,16 +201,55 @@
             this._addPontuation()
             setTimeout(()=>{
                 $(`#explosion-${explosionId}`).remove()
-                if (!this.changeLevel){
-                    this.changeLevel = false
-                    for (let i = 1; i < this.level; i++) {
-                        this._newEnemy()
-                    }
-                } else {
+                let pp = this.pontuation
+                if (pp === 100 || pp === 500 || pp === 700){                  
+                    this._newEnemy()
+                    this._newEnemy()
+                }
+                else if(pp === 1500){ // 1500
+                    this.activeBoss = true
+                    this._newBigBoss()
+                }
+                else if(!this.activeBoss) {
                     this._newEnemy()
                 }
             },700)
         }
+        _bossMonitoring(){
+            setInterval(()=>{
+                let self = this
+                $('#body img').each(function (i, eleE){
+                    if(eleE.className === 'bigboss'){
+                        'rocketfire'
+                        $('#body div').each(function (i, eleF) {
+                            if(eleF.className === 'rocketfire'){
+                                let el = ($(eleE).position())
+                                let element = eleF
+                                let topE = 60
+                                let leftE = 80
+                                if((el.top - topE) <= ($(element).position()).top && (el.top + topE) >= ($(element).position()).top){
+                                    if((el.left - (leftE +50)) <= ($(element).position()).left && (el.left + (50+leftE)) >= ($(element).position()).left){                                
+                                        $(eleF).remove()
+                                        let idFromHit = (new Date().getMilliseconds() * (Math.random()).toFixed(0) * 1548)
+                                        $('#body').append(`<img src="./images/bigBossdamage.gif" id="hit-${idFromHit}" width="30px" style="position:absolute;left:${el.left}px;top:${el.top + 90}px">`)
+                                        setTimeout(()=>{
+                                            $(`#hit-${idFromHit}`).remove()
+                                        },250)
+                                        self._damageBigBoss()
+                                    }
+                                } 
+                            }
+                        })
+                    }
+                })
+
+            },10)
+        }
+
+        /*
+        *  
+        *
+        */
         _killRocket(){
             console.log('morreu')
             $(document).off('mousemove').off('click')
@@ -179,21 +263,99 @@
                 this.gameOver()
             },3000)
         }
+        _damageBigBoss(){
+            this.hitDamageBigBoss++
+            if (this.hitDamageBigBoss > 25) {
+                this.hitDamageBigBoss = 0
+                this.liveBigBoss-- 
+                this._killBigBoss()
+            }
+        }
+        _killBigBoss(){
+            if(this.liveBigBoss < 1) {
+                    setInterval(()=>{
+                        let idExplosion = ((Math.random()).toFixed(0)*(new Date().getMilliseconds())*12354821)
+                        $('#body').prepend(`<div id="bigbossExplosion-${idExplosion}" style="position:absolute;left: ${(($('.bigboss').position()).left -110)}px ;top:${($('.bigboss').position()).top}px"><img src="./images/rocket-explosion.gif" width="200px;z-index:2"></div>`)
+                        setTimeout(()=>{
+                            $(`#bigbossExplosion-${idExplosion}`).remove()
+                        },400)
+                    },2500)
+                $('.bigboss').animate({left: ($(window).width()/2)}, 8000, ()=>{                    
+                    let position = ($('.bigboss').position())
+                    setTimeout(()=>{
+                        $('#body').append(`<img id="bigiboss-explosion" width="700px" src="./images/bigboss-explosion.gif" style="position:absolute;left:${position.left-290}px;top:${position.top - 100}px;margin-left:-150px" >`)
+                        setTimeout(()=>{
+                            $('.bigboss').remove()
+
+                        },3000)
+                        setTimeout(()=>{
+                            $('#bigiboss-explosion').remove()
+                        },4000)
+                    },2000)
+
+                })
+            }
+        }
 
         _moveRocket(e){
             this.rocketX = e.clientX
             this.rocketY = e.clientY
             $('#rocket').animate({left: `${e.clientX}`, top: e.clientY}, 1,() => {})
         }
+        _newBigBoss(){
+            let idBigBoss = `${((Math.random() * 40)*7).toFixed(0)}`
+            $('#body').append(`<img width="300px" class="bigboss" id="bigboss-${idBigBoss}" src="./images/BigBoss.gif" style="position:absolute;top: -200px;left:150px;margin-left:-150px">`)
+            let maxLeft = 0
+            let maxRight = ($(window).width()) - 250
+            $(`#bigboss-${idBigBoss}`).animate({top: 0},6000,()=>{toRigth()})
+            function startFire(id){
+            }
+            let self = this
+            function toRigth(){
+                if(self.liveBigBoss < 1){
+                    return false
+                }
+                $(`#bigboss-${idBigBoss}`).animate({left: maxRight},6000,()=>{toLeft()})
+                startFire(`#bigboss-${idBigBoss}`)
+            }
+            function toLeft(){
+                if(self.liveBigBoss < 1){
+                    return false
+                }
+                $(`#bigboss-${idBigBoss}`).animate({left: maxLeft},6000,()=>{toRigth()})
+            }
+            setTimeout(()=>{
+                let interval = setInterval(()=>{
+                    if(this.gameOverStatus || !$('.bigboss').length || this.liveBigBoss < 1){
+                        clearInterval(interval)
+                    }
+                    setTimeout(()=>{
+                        $('#body').append(`<img src="./images/enemyfire.gif" style="left:${($(`#bigboss-${idBigBoss}`).position()).left - 20}px;top: ${($(`#bigboss-${idBigBoss}`).position()).top + 130}px;"  width="50px" class="enemyfire" alt="">`)
+                        $('.enemyfire').animate({top: $(window).height()}, 2000, ()=>{})
+                    },250)
+                    setTimeout(()=>{
+                        $('#body').append(`<img src="./images/enemyfire.gif" style="left:${($(`#bigboss-${idBigBoss}`).position()).left - 20}px;top: ${($(`#bigboss-${idBigBoss}`).position()).top + 130}px;"  width="50px" class="enemyfire" alt="">`)
+                        $('.enemyfire').animate({top: $(window).height()}, 2000, ()=>{})
+                    },500)
+                    $('#body').append(`<img src="./images/enemyfire.gif" style="left:${($(`#bigboss-${idBigBoss}`).position()).left - 20}px;top: ${($(`#bigboss-${idBigBoss}`).position()).top + 130}px;"  width="50px" class="enemyfire" alt="">`)
+                    $('.enemyfire').animate({top: $(window).height()}, 2000, ()=>{})
+
+                },1000)
+                this._bossMonitoring()
+            },6700)
+
+        }
         
         start(){
+            this.activeBoss = false
+            this._clearPontuation()
             this.gameOverStatus = false
             $('body').removeClass('show-mouse')
             $('body').addClass('hide-mouse')
             $('.gameover').hide()
             $('#body').html('')
             this._newEnemy()
-            $('#body').append('<img src="./images/rocket2.gif" id="rocket" style="width:80px;position: absolute;margin-left: -40px">')
+            $('#body').append('<img src="./images/rocket2.gif"  id="rocket" style="width:80px;position: absolute;margin-left: -40px">')
             $(document).click(this._rocketFire).mousemove(this._moveRocket)
             this._scanGameScreen()
         }
@@ -228,13 +390,15 @@
             for(let element of arrBody){
                 if(element.className === 'enemyfire'){
                     let topE = 20
-                    let leftE = 150
-                    '10 20 30'
-                   if(this.rocketY === ($(element).position()).top){
-                       console.log('maior')
-                   }
+                    let leftE = 30
                     if(($(element).position()).top > ($(window).height() - 50)){
                         $(element).remove()
+                    }
+                    if ((($(element).position()).top - topE) < ($('#rocket').position()).top && (($(element).position()).top + topE) > ($('#rocket').position()).top) {
+                        if ((($(element).position()).left + leftE ) < (($('#rocket').position()).left + 30 )&& (($(element).position()).left  + leftE) > (($('#rocket').position()).left - 15)) {
+                            $(element).remove()
+                            this._killRocket()
+                        }
                     }
                     // ($(element).position()).left
                 }
@@ -262,7 +426,7 @@
     } 
 
     setTimeout(()=>{
-        startGame._killRocket()
+        //startGame._killRocket()
     },4000)
     
     $(function (){
