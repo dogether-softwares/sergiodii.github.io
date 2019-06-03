@@ -208,8 +208,11 @@
                     this._newEnemy()
                 }
                 else if(pp === 1500){ // 1500
-                    this.activeBoss = true
-                    this._newBigBoss()
+                    if(!this.activeBoss){
+                        this.activeBoss = true
+                        this._newBigBoss()
+
+                    }
                 }
                 else if(!this.activeBoss) {
                     this._newEnemy()
