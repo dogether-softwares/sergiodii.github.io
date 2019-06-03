@@ -135,6 +135,7 @@
         activeBoss = false
         liveBigBoss = 50
         hitDamageBigBoss = 0
+        mobileMode = false
 
         /*
         *  
@@ -309,9 +310,10 @@
         }
 
         _moveRocket(e){
+            let time = this.mobileMode ? 1000 : 5
             this.rocketX = e.clientX
             this.rocketY = e.clientY
-            $('#rocket').animate({left: `${e.clientX}`, top: e.clientY}, 1,() => {})
+            $('#rocket').animate({left: `${e.clientX}`, top: e.clientY}, time,() => {})
         }
         _newBigBoss(){
             let idBigBoss = `${((Math.random() * 40)*7).toFixed(0)}`
@@ -358,6 +360,7 @@
 
         }
         _mobileControl(){
+            this.mobileMode = true
             setInterval(()=>{
                 let position = $('#rocket').position()
                 let e = {}
